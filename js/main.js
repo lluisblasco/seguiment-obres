@@ -40,6 +40,11 @@ export function navega(hash) {
 
 // Clics globals: rutes, ull, menú mòbil
 document.addEventListener('click', e => {
+  // Mòbil: tocar fora del menú obert el tanca
+  const arrel = document.getElementById('app');
+  if (arrel.classList.contains('menu-obert') && !e.target.closest('.side') && !e.target.closest('[data-accio="menu"]')) {
+    arrel.classList.remove('menu-obert'); return;
+  }
   const r = e.target.closest('[data-ruta]');
   if (r) { e.preventDefault(); navega(r.dataset.ruta); return; }
   const a = e.target.closest('[data-accio]');
