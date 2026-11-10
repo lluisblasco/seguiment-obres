@@ -49,7 +49,7 @@ function render() {
     <div class="xifra"><b>${obertes.length}</b><span>Obres en curs</span></div>
     <div class="xifra"><b>${obertes.filter(o => o.tipusClient === 'Particular').length}<i>/${obertes.filter(o => o.tipusClient === 'Constructora').length}</i></b><span>Particulars / obres</span></div>
     <div class="xifra"><b>${unitats}</b><span>Elements en curs</span></div>
-    <div class="xifra"><b class="diners">${fmtDiners(importEnCurs, app.amagat)}</b><span>Import en curs</span></div></div>
+    <div class="xifra"><b class="diners">${fmtDiners(importEnCurs, app.amagat)}</b><span>Import en curs (sense IVA)</span></div></div>
     <div class="card mini-graf"><h3>Obres per etapa</h3>
       ${grups.map(g => `<div class="hb" title="${esc(g.l)}: ${g.n}"><span>${esc(g.l)}</span><i><em style="width:${g.n / maxG * 100}%"></em></i><b>${g.n}</b></div>`).join('')}</div>
     <div class="card mini-graf"><h3>Comandes</h3>

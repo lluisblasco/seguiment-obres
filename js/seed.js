@@ -3,17 +3,26 @@ import { novaObra, inferirEtapes } from './model.js';
 
 const uid = () => (globalThis.crypto?.randomUUID?.() ?? `id-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
+// Import sense IVA d'un registre del Z: la base imposable del PDF o, si no n'hi ha, el total / 1,21
+export function senseIva(r) {
+  if (Number.isFinite(+r.base) && +r.base > 0) return Math.round(+r.base * 100) / 100;
+  if (Number.isFinite(+r.total) && +r.total > 0) return Math.round(+r.total / 1.21 * 100) / 100;
+  return null;
+}
+
 export function obresDesDeImportacio(registres = []) {
   return registres.map(r => {
     const constructora = r.tipus === 'Constructora';
     const total = Number.isFinite(+r.total) && +r.total > 0 ? +r.total : null;
+    const base = senseIva(r);
     return novaObra({
       client: r.client || '',
       nom: r.nom || '',
       tipusClient: constructora ? 'Constructora' : 'Particular',
       material: r.material || 'Alumini',
       numPressupost: r.num || '',
-      import: total,
+      import: base,          // sense IVA (base imposable): és el que mostra l'app
+      importAmbIva: total,
       bestreta: constructora ? 'no cal' : 'pendent',
       telefon: r.tel || '',
       adreca: r.adreca || '',
@@ -54,7 +63,7 @@ export function obresDuplicades(existents, importades) {
 export const IMPORT_MINIM = { Particular: 1000, Constructora: 3500 };
 export function passaMinim(x) {
   const tipus = x.tipusClient || x.tipus || 'Particular';
-  const imp = x.import ?? x.total;
+  const imp = x.import !== undefined ? x.import : senseIva(x);
   if (imp == null || imp === '' || !Number.isFinite(+imp)) return true;
   return +imp >= (IMPORT_MINIM[tipus] ?? 0);
 }

@@ -40,7 +40,9 @@ function detall(ruta) {
   const pest = llegeixLocal('so.pestanya', 'elements');
   const act = etapaActual(o), s = estadistiques(o), av = avisos(o);
   const fotosN = (o.fotos || []).length;
-  const bestretaTxt = o.tipusClient === 'Constructora' ? 'No cal (constructora)' : o.bestreta === 'cobrada' ? `Cobrada · ${fmtDiners((+o.import || 0) / 2, app.amagat)}` : `Pendent · ${fmtDiners((+o.import || 0) / 2, app.amagat)}`;
+  // La bestreta és el 50% del que paga el client, IVA inclòs
+  const ambIva = +o.importAmbIva || (+o.import || 0) * 1.21;
+  const bestretaTxt = o.tipusClient === 'Constructora' ? 'No cal (constructora)' : `${o.bestreta === 'cobrada' ? 'Cobrada' : 'Pendent'} · ${fmtDiners(ambIva / 2, app.amagat)} amb IVA`;
 
   const etapes = ETAPES.map((nom, i) => `<label class="et-fila ${o.etapes[i] ? 'feta' : i === act ? 'ara' : ''}">
       <input type="checkbox" data-etapa="${i}" ${o.etapes[i] ? 'checked' : ''}><span class="et-check">${o.etapes[i] ? '✓' : i + 1}</span>
@@ -96,7 +98,7 @@ function detall(ruta) {
         <div><dt>Telèfon</dt><dd>${o.telefon ? `<a href="tel:${esc(o.telefon)}">${esc(o.telefon)}</a>` : '—'}</dd></div>
         <div><dt>Tipus</dt><dd>${esc(o.tipusClient)} · ${esc(o.material)}</dd></div>
         <div><dt>Nº pressupost</dt><dd>${esc(o.numPressupost || '—')}</dd></div>
-        <div><dt>Import</dt><dd class="diners">${fmtDiners(o.import, app.amagat, 2)}</dd></div>
+        <div><dt>Import sense IVA</dt><dd class="diners">${fmtDiners(o.import, app.amagat, 2)}</dd></div>
         <div><dt>Bestreta 50%</dt><dd>${o.tipusClient === 'Particular' ? `<button class="pill ${o.bestreta === 'cobrada' ? 'ok' : 'avis'}" data-accio-o="bestreta" title="Clica per canviar">${bestretaTxt}</button>` : bestretaTxt}</dd></div>
         <div><dt>Data pressupost</dt><dd>${dataCurta(o.dataPressupost)}</dd></div>
         <div><dt>Muntatge previst</dt><dd>${dataCurta(o.muntatgePrevist)}</dd></div>
@@ -124,7 +126,7 @@ function formFitxa(o, { titol }) {
         <div class="camp"><label>Tipus de client</label><div class="opts">${['Particular', 'Constructora'].map(t => `<button type="button" class="opt ${o.tipusClient === t ? 'on' : ''}" data-v-tipus="${t}">${t}</button>`).join('')}</div></div>
         <div class="camp"><label>Material</label><div class="opts">${['Alumini', 'PVC', 'Ferro', 'Altres'].map(t => `<button type="button" class="opt ${o.material === t ? 'on' : ''}" data-v-mat="${t}">${t}</button>`).join('')}</div></div>
       </div>
-      <div class="graella g3">${c('telefon', 'Telèfon', o.telefon, 'inputmode="tel"')}${c('numPressupost', 'Nº pressupost', o.numPressupost)}<div class="camp"><label for="f-import">Import total (€)</label><input class="inp" id="f-import" name="import" type="number" step="0.01" min="0" ${atributsDiners(o.import, app.amagat)}></div></div>
+      <div class="graella g3">${c('telefon', 'Telèfon', o.telefon, 'inputmode="tel"')}${c('numPressupost', 'Nº pressupost', o.numPressupost)}<div class="camp"><label for="f-import">Import sense IVA (€)</label><input class="inp" id="f-import" name="import" type="number" step="0.01" min="0" ${atributsDiners(o.import, app.amagat)}></div></div>
       <div class="graella g3">${c('dataPressupost', 'Data pressupost', o.dataPressupost?.slice(0, 10), 'type="date"')}${c('muntatgePrevist', 'Muntatge previst', o.muntatgePrevist?.slice(0, 10), 'type="date"')}
         <div class="camp"><label for="f-bestreta">Bestreta 50%</label><select class="inp" id="f-bestreta" name="bestreta">${['pendent', 'cobrada', 'no cal'].map(v => `<option ${o.bestreta === v ? 'selected' : ''}>${v}</option>`).join('')}</select></div></div>
       ${c('adreca', 'Adreça de l\'obra', o.adreca)}
