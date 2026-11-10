@@ -41,6 +41,7 @@ export function topbar(titol, { sub = '', accions = '', amagat = false, enrere =
     ${enrere ? `<button class="btn icona" data-ruta="${enrere}" aria-label="Tornar">${ICONA.enrere}</button>` : ''}
     <h1>${esc(titol)}${sub ? `<span class="sub">${esc(sub)}</span>` : ''}</h1>
     ${accions}
+    <button class="btn icona boto-menu" data-ruta="#/config" aria-label="Configuració" title="Configuració">${ICONA.config}</button>
     <button class="ull ${amagat ? 'tancat' : ''}" data-accio="ull" title="${amagat ? 'Mostrar imports' : 'Amagar imports'}" aria-label="${amagat ? 'Mostrar imports' : 'Amagar imports'}">${amagat ? ICONA.ullTancat : ICONA.ull}</button>
   </div>`;
 }
