@@ -32,7 +32,7 @@ export function renderShell(estat, ruta) {
     ${desplegable('particulars', 'particulars', 'Particulars', parts)}
     <div style="border-top:1px solid rgba(255,255,255,.06)"><button class="nav ${ruta.vista === 'reparacions' ? 'on' : ''}" data-ruta="#/reparacions">${ICONA.reparacions}Reparacions${repPend ? `<span class="cnt">${repPend}</span>` : ''}</button></div>
     <button class="nav ${ruta.vista === 'config' ? 'on' : ''}" data-ruta="#/config">${ICONA.config}Configuració</button>
-    <div class="side-peu" id="estat-dades">Dades desades en aquest ordinador</div>`;
+    <div class="side-peu" id="estat-dades">Dades desades en aquest dispositiu</div>`;
 }
 
 export function topbar(titol, { sub = '', accions = '', amagat = false, enrere = '' } = {}) {

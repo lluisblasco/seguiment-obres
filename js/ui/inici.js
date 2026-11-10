@@ -64,7 +64,17 @@ function render() {
       <thead><tr><th>Nº</th><th>Client · obra</th><th>Tipus</th><th>Mat.</th>${ETAPES_CURT.map((c, i) => `<th class="et" title="${esc(ETAPES[i])}">${c}</th>`).join('')}<th>Estat</th><th class="imp">Import</th></tr></thead>
       <tbody>${llista.map(fila).join('')}</tbody></table>`
       : `<div class="buit"><b>Cap obra en aquest filtre</b>Canvia el filtre o crea una obra nova.</div>`}
-  </div>`;
+  </div>
+  <div class="llista-mobil">${llista.map(o => {
+    const act = etapaActual(o), av = avisos(o), te = av.some(a => a.nivell === 'avis');
+    return `<button class="card targeta" data-obrir="#/${vistaDe(o)}/${encodeURIComponent(o.id)}">
+      <div class="t-cap"><b>${esc(o.client)}</b><span class="tc ${o.tipusClient === 'Constructora' ? 'c' : 'p'}">${o.tipusClient === 'Constructora' ? 'Obra' : 'Part.'}</span></div>
+      <div class="t-nom">${esc(o.nom)}</div>
+      <div class="barra-et">${ETAPES.map((_, i) => `<i class="${o.etapes[i] ? 'f' : i === act ? 'a' : ''}"></i>`).join('')}</div>
+      <div class="t-et"><b>${o.etapes[11] ? 'Acabada' : esc(ETAPES[act])}</b><span class="diners">${fmtDiners(o.import, app.amagat)}</span></div>
+      <span class="pill ${te ? 'avis' : 'ok'}">${te ? '⚠' : '✓'} ${esc((av.find(a => a.nivell === 'avis') || av[0]).text)}</span>
+    </button>`;
+  }).join('')}</div>`;
 }
 
 function despres(arrel) {
