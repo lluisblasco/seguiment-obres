@@ -2,17 +2,17 @@
 import { app, registraVista, refresca, navega } from '../main.js';
 import { topbar } from './shell.js';
 import { esc, toast, guardaLocal, llegeixLocal } from '../util.js';
-import { ETAPES, ETAPES_CURT, etapaActual, avisos, fmtDiners, estadistiques, marcaEtapa, progresSubtasques, SUBTASQUES } from '../model.js';
+import { ETAPES, ETAPES_CURT, ordenaAlfabetic, etapaActual, avisos, fmtDiners, estadistiques, marcaEtapa, progresSubtasques, SUBTASQUES } from '../model.js';
 import { desaObra } from './arrencada.js';
 
 const FILTRES = ['Totes', 'Obres', 'Particulars', 'Amb avisos'];
-const GRUPS = [['Abans d\'acceptar', 0, 4], ['Comandes i material', 5, 6], ['Al taller', 7, 9], ['Muntatge', 10, 10], ['Acabades', 11, 11]];
+const GRUPS = [['Abans d\'acceptar', 0, 4], ['Comandes i material', 5, 6], ['Al taller', 7, 9], ['Muntatge', 10, 10]];
 const vistaDe = o => (o.tipusClient === 'Constructora' ? 'obres' : 'particulars');
 const acabada = o => o.etapes?.[11];
 
 function render() {
   const filtre = llegeixLocal('so.filtreInici', 'Totes');
-  const totes = app.obres.filter(o => !o.etapes?.[11]).sort((a, b) => etapaActual(a) - etapaActual(b) || String(b.numPressupost).localeCompare(String(a.numPressupost)));
+  const totes = ordenaAlfabetic(app.obres.filter(o => !o.etapes?.[11]));
   const ambAvis = o => avisos(o).some(a => a.nivell === 'avis');
   const llista = totes.filter(o => filtre === 'Obres' ? o.tipusClient === 'Constructora' : filtre === 'Particulars' ? o.tipusClient === 'Particular' : filtre === 'Amb avisos' ? ambAvis(o) : true);
 

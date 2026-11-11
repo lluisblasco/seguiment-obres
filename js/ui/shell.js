@@ -1,14 +1,15 @@
 import { esc } from '../util.js';
 import { ICONA } from './icones.js';
-import { agrupaPerMaterial } from '../model.js';
+import { agrupaPerMaterial, ordenaAlfabetic } from '../model.js';
 
 const MARCA = `<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="1" y="1" width="28" height="28" rx="7" fill="#22376B"/><rect x="6" y="6" width="8.5" height="18" rx="1.5" fill="#D8E6F5"/><rect x="15.5" y="6" width="8.5" height="18" rx="1.5" fill="#D8E6F5"/><path d="M14.5 6 L6.5 15 L14.5 24" stroke="#E8A33D" stroke-width="1.4" stroke-dasharray="2.6 1.6" fill="none"/></svg>`;
 
 // estat: { obres, reparacions, menu:{obres:bool, particulars:bool}, avisosDe:(obra)=>[] }
 export function renderShell(estat, ruta) {
   const { obres = [], reparacions = [], menu = {}, avisosDe = () => [] } = estat;
-  const grup = tipus => obres.filter(o => o.tipusClient === tipus)
-    .sort((a, b) => String(b.numPressupost || b.creada).localeCompare(String(a.numPressupost || a.creada)));
+  const fm = estat.filtreMat || 'Tot';
+  const passaMat = o => fm === 'Tot' || (fm === 'PVC' ? o.material === 'PVC' : o.material !== 'PVC');
+  const grup = tipus => ordenaAlfabetic(obres.filter(o => o.tipusClient === tipus && passaMat(o)));
   const constr = grup('Constructora'), parts = grup('Particular');
   const ambAvis = obres.filter(o => avisosDe(o).some(a => a.nivell === 'avis')).length;
   const repPend = reparacions.filter(r => r.estat === 'pendent').length;
@@ -41,6 +42,7 @@ export function renderShell(estat, ruta) {
 
   return `
     <div class="marca">${MARCA}<div>Seguiment d'Obres<small>Alutec Delta</small></div></div>
+    <div class="filtre-mat" role="group" aria-label="Material">${['Tot', 'Alumini', 'PVC'].map(m => `<button class="${fm === m ? 'on' : ''}" data-accio="mat" data-mat="${m}" aria-pressed="${fm === m}">${m}</button>`).join('')}</div>
     <button class="nav ${ruta.vista === 'inici' ? 'on' : ''}" data-ruta="#/inici">${ICONA.inici}Inici${ambAvis ? `<span class="cnt avis" title="Obres amb avisos">${ambAvis}</span>` : ''}</button>
     ${desplegable('obres', 'obres', 'Obres', constr)}
     ${desplegable('particulars', 'particulars', 'Particulars', parts)}

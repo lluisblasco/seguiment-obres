@@ -83,6 +83,17 @@ export function agrupaPerMaterial(obres = []) {
 }
 
 export const esFinalitzada = obra => !!obra.etapes?.[11];
+
+export function marcaFinalitzada(obra) {
+  for (let i = 0; i < 12; i++) marcaEtapa(obra, i, true);
+  return obra;
+}
+
+// Ordre alfabètic per client i obra (català, sense distingir accents ni majúscules)
+const COL = new Intl.Collator('ca', { sensitivity: 'base', numeric: true });
+export function ordenaAlfabetic(obres = []) {
+  return [...obres].sort((a, b) => COL.compare(a.client || '', b.client || '') || COL.compare(a.nom || '', b.nom || ''));
+}
 export const reparacioFinalitzada = rep => rep.estat === 'feta' || rep.estat === 'facturada';
 
 export function etapaActual(obra) {
@@ -101,6 +112,11 @@ export function campsQueFalten(el) {
 }
 
 export function avisos(obra) {
+  // Obra acabada: només compten els remats que el client hagi demanat després
+  if (obra.etapes?.[11]) {
+    const rem = (obra.remats || []).filter(r => r.estat !== 'fet').length;
+    return rem ? [{ nivell: 'avis', text: `${rem} remat${rem > 1 ? 's' : ''} pendent${rem > 1 ? 's' : ''}` }] : [{ nivell: 'ok', text: 'Obra acabada' }];
+  }
   const out = [];
   const actual = etapaActual(obra);
   const fetes = i => !!obra.etapes?.[i];
@@ -114,7 +130,7 @@ export function avisos(obra) {
   if (obra.tipusClient === 'Particular' && fetes(4) && obra.bestreta !== 'cobrada' && obra.bestreta !== 'no cal') {
     out.push({ nivell: 'avis', text: 'Bestreta del 50% pendent' });
   }
-  const incomplets = (obra.elements || []).filter(e => campsQueFalten(e).length).length;
+  const incomplets = actual <= 2 ? (obra.elements || []).filter(e => campsQueFalten(e).length).length : 0; // només mentre es prenen mides
   if (incomplets) out.push({ nivell: 'avis', text: `${incomplets} element${incomplets > 1 ? 's' : ''} amb dades per completar` });
   const rem = (obra.remats || []).filter(r => r.estat !== 'fet').length;
   if (rem) out.push({ nivell: 'avis', text: `${rem} remat${rem > 1 ? 's' : ''} pendent${rem > 1 ? 's' : ''}` });
@@ -188,11 +204,11 @@ export function separaContacte(text = '') {
 }
 
 export function ordenaReparacions(reps = []) {
-  const pes = { pendent: 0, feta: 1, facturada: 2 };
-  return [...reps].sort((a, b) => (pes[a.estat] ?? 9) - (pes[b.estat] ?? 9)
+  return [...reps].sort((a, b) => COL_REP.compare(a.client || '', b.client || '')
     || String(b.data || '').localeCompare(String(a.data || ''))
     || String(a.creada || '').localeCompare(String(b.creada || '')));
 }
+const COL_REP = new Intl.Collator('ca', { sensitivity: 'base', numeric: true });
 
 export function fmtDiners(v, amagat, decimals = 0) {
   if (amagat) return '•••• €';

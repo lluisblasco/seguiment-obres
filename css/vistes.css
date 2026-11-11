@@ -262,3 +262,4 @@ button.etc:hover{transform:scale(1.15);border-color:var(--mitjanit-4)}
 .grup-mat{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;margin:6px 0 10px}
 .grup-mat span{font-size:12px;background:var(--mitjanit);color:#fff;padding:1px 9px;border-radius:999px}
 .targetes + .grup-mat{margin-top:22px}
+.t-cap .diners{white-space:nowrap;flex:none}

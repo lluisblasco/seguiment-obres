@@ -2,7 +2,7 @@
 import { app, registraVista, refresca, navega } from '../main.js';
 import { topbar } from './shell.js';
 import { esc, toast, confirma, dataCurta, guardaLocal, llegeixLocal, atributsDiners } from '../util.js';
-import { ETAPES, novaObra, etapaActual, avisos, estadistiques, comandesDesDElements, fmtDiners, TIPUS_DIBUIXABLES, campsQueFalten, esFinalitzada, agrupaPerMaterial, SUBTASQUES, marcaEtapa, marcaSubtasca, progresSubtasques } from '../model.js';
+import { ETAPES, novaObra, etapaActual, avisos, estadistiques, comandesDesDElements, fmtDiners, TIPUS_DIBUIXABLES, campsQueFalten, esFinalitzada, agrupaPerMaterial, ordenaAlfabetic, SUBTASQUES, marcaEtapa, marcaSubtasca, progresSubtasques } from '../model.js';
 import { desaObra } from './arrencada.js';
 import { esborra, desaFoto, fotoURL, esborraFoto } from '../db.js';
 import { comprimeixFoto } from '../fotos.js';
@@ -18,10 +18,11 @@ const uid = () => crypto.randomUUID();
 function llista(ruta) {
   const tipus = tipusDeVista(ruta.vista);
   const fin = ruta.id === 'finalitzades';
-  const totes = app.obres.filter(o => o.tipusClient === tipus);
+  const fm = app.filtreMat || 'Tot';
+  const totes = app.obres.filter(o => o.tipusClient === tipus && (fm === 'Tot' || (fm === 'PVC' ? o.material === 'PVC' : o.material !== 'PVC')));
   const nEnCurs = totes.filter(o => !esFinalitzada(o)).length, nFin = totes.length - nEnCurs;
-  const obres = totes.filter(o => esFinalitzada(o) === fin).sort((a, b) => etapaActual(a) - etapaActual(b) || String(b.numPressupost).localeCompare(String(a.numPressupost)));
-  const titol = `${ruta.vista === 'obres' ? 'Obres' : 'Particulars'} ${fin ? 'finalitzades' : 'en curs'}`;
+  const obres = ordenaAlfabetic(totes.filter(o => esFinalitzada(o) === fin));
+  const titol = `${ruta.vista === 'obres' ? 'Obres' : 'Particulars'} ${fin ? 'finalitzades' : 'en curs'}${fm !== 'Tot' ? ` · ${fm}` : ''}`;
   return topbar(titol, { sub: `${obres.length}`, amagat: app.amagat, accions: `<button class="btn prim" data-accio="nova-obra" data-tipus="${tipus}">+ Nou${ruta.vista === 'obres' ? 'a obra' : ' particular'}</button>` }) +
     `<div class="segment"><button class="${fin ? '' : 'on'}" data-ruta="#/${ruta.vista}">En curs<span>${nEnCurs}</span></button><button class="${fin ? 'on' : ''}" data-ruta="#/${ruta.vista}/finalitzades">Finalitzades<span>${nFin}</span></button></div>` +
     (obres.length ? agrupaPerMaterial(obres).map(g => `<h2 class="grup-mat">${g.material} · ${g.abast}<span>${g.obres.length}</span></h2><div class="targetes">${g.obres.map(o => {

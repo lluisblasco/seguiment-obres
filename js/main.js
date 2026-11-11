@@ -8,6 +8,7 @@ export const app = {
   reparacions: [],
   amagat: llegeixLocal('so.amagaDiners', false),
   menu: llegeixLocal('so.menu', {}),
+  filtreMat: llegeixLocal('so.filtreMat', 'Tot'),   // Tot | Alumini | PVC (menú i llistes)
   avisosDe: () => [],
   vistes: {},          // nom -> async (ruta, app) => html
   despres: {},         // nom -> (arrel, ruta, app) => void (enllaçar esdeveniments)
@@ -49,6 +50,7 @@ document.addEventListener('click', e => {
   if (r) { e.preventDefault(); navega(r.dataset.ruta); return; }
   const a = e.target.closest('[data-accio]');
   if (!a) return;
+  if (a.dataset.accio === 'mat') { app.filtreMat = a.dataset.mat; guardaLocal('so.filtreMat', app.filtreMat); refresca(); return; }
   if (a.dataset.accio === 'ull') { app.amagat = !app.amagat; guardaLocal('so.amagaDiners', app.amagat); refresca(); }
   if (a.dataset.accio === 'menu') document.getElementById('app').classList.toggle('menu-obert');
 });

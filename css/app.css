@@ -137,3 +137,8 @@ dialog::backdrop{background:rgba(11,21,48,.45)}
 .sub-mat b{font-size:10.5px;color:#8C99B8;font-weight:600}
 .sub-mat{display:flex;align-items:center;gap:6px;padding:6px 18px 2px 46px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--contrast);text-transform:uppercase}
 .sub-mat b{font-size:10.5px;color:#8C99B8;font-weight:600}
+/* ---- Selector de material del menú ---- */
+.filtre-mat{display:flex;gap:4px;margin:0 14px 12px;background:rgba(255,255,255,.06);padding:4px;border-radius:10px}
+.filtre-mat button{flex:1;height:30px;border-radius:7px;font-size:13px;font-weight:600;color:#AEB9D2}
+.filtre-mat button:hover{color:#fff}
+.filtre-mat button.on{background:var(--contrast);color:var(--mitjanit)}
