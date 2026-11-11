@@ -8,7 +8,7 @@ export const app = {
   reparacions: [],
   amagat: llegeixLocal('so.amagaDiners', false),
   menu: llegeixLocal('so.menu', {}),
-  filtreMat: llegeixLocal('so.filtreMat', 'Tot'),   // Tot | Alumini | PVC (menú i llistes)
+  filtreMat: llegeixLocal('so.filtreMat2', 'Tot'),   // Tot | Alumini | PVC (menú i llistes)
   avisosDe: () => [],
   vistes: {},          // nom -> async (ruta, app) => html
   despres: {},         // nom -> (arrel, ruta, app) => void (enllaçar esdeveniments)
@@ -49,13 +49,13 @@ document.addEventListener('click', e => {
   const r = e.target.closest('[data-ruta]');
   if (r) {
     e.preventDefault();
-    // Seccions Alumini / PVC del menú: també canvien el filtre de material
-    if (r.dataset.mat) { app.filtreMat = r.dataset.mat; guardaLocal('so.filtreMat', app.filtreMat); }
+    // Seccions Alumini / PVC del menú: només filtren la llista de la dreta (el menú continua mostrant els dos)
+    app.matLlista = r.dataset.mat || null;
     navega(r.dataset.ruta); return;
   }
   const a = e.target.closest('[data-accio]');
   if (!a) return;
-  if (a.dataset.accio === 'mat') { app.filtreMat = a.dataset.mat; guardaLocal('so.filtreMat', app.filtreMat); refresca(); return; }
+  if (a.dataset.accio === 'mat') { app.matLlista = null; app.filtreMat = a.dataset.mat; guardaLocal('so.filtreMat2', app.filtreMat); refresca(); return; }
   if (a.dataset.accio === 'ull') { app.amagat = !app.amagat; guardaLocal('so.amagaDiners', app.amagat); refresca(); }
   if (a.dataset.accio === 'menu') document.getElementById('app').classList.toggle('menu-obert');
 });

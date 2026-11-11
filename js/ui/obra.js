@@ -18,7 +18,7 @@ const uid = () => crypto.randomUUID();
 function llista(ruta) {
   const tipus = tipusDeVista(ruta.vista);
   const fin = ruta.id === 'finalitzades';
-  const fm = app.filtreMat || 'Tot';
+  const fm = app.matLlista || app.filtreMat || 'Tot';
   const totes = app.obres.filter(o => o.tipusClient === tipus && (fm === 'Tot' || (fm === 'PVC' ? o.material === 'PVC' : o.material !== 'PVC')));
   const nEnCurs = totes.filter(o => !esFinalitzada(o)).length, nFin = totes.length - nEnCurs;
   const obres = ordenaAlfabetic(totes.filter(o => esFinalitzada(o) === fin));

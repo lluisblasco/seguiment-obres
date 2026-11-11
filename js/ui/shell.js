@@ -27,7 +27,7 @@ export function renderShell(estat, ruta) {
   const blocMaterial = (clau, vista, mat, llista) => {
     const delMat = llista.filter(o => (mat === 'PVC' ? o.material === 'PVC' : o.material !== 'PVC'));
     const enCurs = delMat.filter(o => !acabada(o)), fins = delMat.filter(acabada);
-    const aqui = ruta.vista === vista && fm === mat;
+    const aqui = ruta.vista === vista && (estat.matLlista || fm) === mat;
     return `
       <details data-menu="${clau}-${mat}" ${menu[`${clau}-${mat}`] !== false ? 'open' : ''} class="mat">
         <summary><span class="sub-matcap">${mat}<b>${enCurs.length}</b></span></summary>
