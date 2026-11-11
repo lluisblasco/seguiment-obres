@@ -15,7 +15,7 @@ const arrodoneix = (v, d = 2) => Math.round(v * 10 ** d) / 10 ** d;
 export function novaObra(dades = {}) {
   return {
     id: uid(),
-    client: '', nom: '', tipusClient: 'Particular', material: 'Alumini',
+    client: '', nom: '', tipusClient: 'Particular', material: 'Alumini', abast: 'Fabricació i muntatge',
     telefon: '', adreca: '', numPressupost: '', import: null, bestreta: '',
     dataPressupost: '', muntatgePrevist: '', carpeta: '', notes: '',
     etapes: Array(12).fill(false), datesEtapes: Array(12).fill(null),
@@ -68,10 +68,18 @@ export function progresSubtasques(obra, etapa) {
 }
 
 // Grups per material, en aquest ordre; la resta de materials van a «Altres». Els grups buits no surten.
+// i, dins de cada material, per abast (fabricació i muntatge / només fabricació)
+export const ABASTOS = ['Fabricació i muntatge', 'Només fabricació'];
 export function agrupaPerMaterial(obres = []) {
-  const grups = { Alumini: [], PVC: [], Altres: [] };
-  for (const o of obres) (grups[o.material === 'Alumini' || o.material === 'PVC' ? o.material : 'Altres']).push(o);
-  return Object.entries(grups).filter(([, l]) => l.length).map(([material, l]) => ({ material, obres: l }));
+  const out = [];
+  for (const material of ['Alumini', 'PVC', 'Altres']) {
+    const delMaterial = obres.filter(o => (o.material === 'Alumini' || o.material === 'PVC' ? o.material : 'Altres') === material);
+    for (const abast of ABASTOS) {
+      const l = delMaterial.filter(o => (ABASTOS.includes(o.abast) ? o.abast : ABASTOS[0]) === abast);
+      if (l.length) out.push({ material, abast, obres: l });
+    }
+  }
+  return out;
 }
 
 export const esFinalitzada = obra => !!obra.etapes?.[11];

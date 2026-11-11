@@ -24,12 +24,12 @@ function llista(ruta) {
   const titol = `${ruta.vista === 'obres' ? 'Obres' : 'Particulars'} ${fin ? 'finalitzades' : 'en curs'}`;
   return topbar(titol, { sub: `${obres.length}`, amagat: app.amagat, accions: `<button class="btn prim" data-accio="nova-obra" data-tipus="${tipus}">+ Nou${ruta.vista === 'obres' ? 'a obra' : ' particular'}</button>` }) +
     `<div class="segment"><button class="${fin ? '' : 'on'}" data-ruta="#/${ruta.vista}">En curs<span>${nEnCurs}</span></button><button class="${fin ? 'on' : ''}" data-ruta="#/${ruta.vista}/finalitzades">Finalitzades<span>${nFin}</span></button></div>` +
-    (obres.length ? agrupaPerMaterial(obres).map(g => `<h2 class="grup-mat">${g.material}<span>${g.obres.length}</span></h2><div class="targetes">${g.obres.map(o => {
+    (obres.length ? agrupaPerMaterial(obres).map(g => `<h2 class="grup-mat">${g.material} · ${g.abast}<span>${g.obres.length}</span></h2><div class="targetes">${g.obres.map(o => {
       const act = etapaActual(o), av = avisos(o), te = av.some(a => a.nivell === 'avis'), s = estadistiques(o);
       return `<button class="card targeta" data-ruta="#/${ruta.vista}/${encodeURIComponent(o.id)}">
         <div class="t-cap"><b>${esc(o.client)}</b><span class="diners">${fmtDiners(o.import, app.amagat)}</span></div>
         <div class="t-nom">${esc(o.nom)}</div>
-        <div class="t-meta">${o.numPressupost ? `Nº ${esc(o.numPressupost)} · ` : ''}${esc(o.material)}${s.unitats ? ` · ${s.unitats} elements` : ''}</div>
+        <div class="t-meta">${o.numPressupost ? `Nº ${esc(o.numPressupost)} · ` : ''}${esc(o.material)} · ${esc(o.abast || 'Fabricació i muntatge')}${s.unitats ? ` · ${s.unitats} elements` : ''}</div>
         <div class="barra-et">${ETAPES.map((_, i) => `<i class="${o.etapes[i] ? 'f' : i === act ? 'a' : ''}"></i>`).join('')}</div>
         <div class="t-et"><b>${o.etapes[11] ? 'Acabada' : esc(ETAPES[act])}</b><span>${o.etapes.filter(Boolean).length} de 12</span></div>
         <span class="pill ${te ? 'avis' : 'ok'}">${te ? '⚠' : '✓'} ${esc((av.find(a => a.nivell === 'avis') || av[0]).text)}</span>
@@ -104,7 +104,7 @@ function detall(ruta) {
       <div class="card fitxa"><dl>
         <div><dt>Client</dt><dd>${esc(o.client)}</dd></div>
         <div><dt>Telèfon</dt><dd>${o.telefon ? `<a href="tel:${esc(o.telefon)}">${esc(o.telefon)}</a>` : '—'}</dd></div>
-        <div><dt>Tipus</dt><dd>${esc(o.tipusClient)} · ${esc(o.material)}</dd></div>
+        <div><dt>Tipus</dt><dd>${esc(o.tipusClient)} · ${esc(o.material)}<br><small>${esc(o.abast || 'Fabricació i muntatge')}</small></dd></div>
         <div><dt>Nº pressupost</dt><dd>${esc(o.numPressupost || '—')}</dd></div>
         <div><dt>Import sense IVA</dt><dd class="diners">${fmtDiners(o.import, app.amagat, 2)}</dd></div>
         <div><dt>Bestreta 50%</dt><dd>${o.tipusClient === 'Particular' ? `<button class="pill ${o.bestreta === 'cobrada' ? 'ok' : 'avis'}" data-accio-o="bestreta" title="Clica per canviar">${bestretaTxt}</button>` : bestretaTxt}</dd></div>
@@ -133,6 +133,7 @@ function formFitxa(o, { titol }) {
       <div class="graella g2">
         <div class="camp"><label>Tipus de client</label><div class="opts">${['Particular', 'Constructora'].map(t => `<button type="button" class="opt ${o.tipusClient === t ? 'on' : ''}" data-v-tipus="${t}">${t}</button>`).join('')}</div></div>
         <div class="camp"><label>Material</label><div class="opts">${['Alumini', 'PVC', 'Ferro', 'Altres'].map(t => `<button type="button" class="opt ${o.material === t ? 'on' : ''}" data-v-mat="${t}">${t}</button>`).join('')}</div></div>
+        <div class="camp"><label>Feina</label><div class="opts">${['Fabricació i muntatge', 'Només fabricació'].map(t => `<button type="button" class="opt ${(o.abast || 'Fabricació i muntatge') === t ? 'on' : ''}" data-v-abast="${t}">${t}</button>`).join('')}</div></div>
       </div>
       <div class="graella g3">${c('telefon', 'Telèfon', o.telefon, 'inputmode="tel"')}${c('numPressupost', 'Nº pressupost', o.numPressupost)}<div class="camp"><label for="f-import">Import sense IVA (€)</label><input class="inp" id="f-import" name="import" type="number" step="0.01" min="0" ${atributsDiners(o.import, app.amagat)}></div></div>
       <div class="graella g3">${c('dataPressupost', 'Data pressupost', o.dataPressupost?.slice(0, 10), 'type="date"')}${c('muntatgePrevist', 'Muntatge previst', o.muntatgePrevist?.slice(0, 10), 'type="date"')}
@@ -140,10 +141,11 @@ function formFitxa(o, { titol }) {
       ${c('adreca', 'Adreça de l\'obra', o.adreca)}
       ${c('carpeta', 'Carpeta al Z: (opcional)', o.carpeta)}
     </div><div class="dlg-peu"><button type="button" class="btn" data-cancela>Cancel·lar</button><button class="btn prim">Desar</button></div></form>`;
-    const val = { tipusClient: o.tipusClient, material: o.material };
+    const val = { tipusClient: o.tipusClient, material: o.material, abast: o.abast || 'Fabricació i muntatge' };
     d.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.vTipus) { val.tipusClient = b.dataset.vTipus; b.parentElement.querySelectorAll('.opt').forEach(x => x.classList.toggle('on', x === b)); }
+      if (b.dataset.vAbast) { val.abast = b.dataset.vAbast; b.parentElement.querySelectorAll('.opt').forEach(x => x.classList.toggle('on', x === b)); }
       if (b.dataset.vMat) { val.material = b.dataset.vMat; b.parentElement.querySelectorAll('.opt').forEach(x => x.classList.toggle('on', x === b)); }
       if (b.hasAttribute('data-cancela')) d.close();
     });

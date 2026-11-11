@@ -20,7 +20,7 @@ export function renderShell(estat, ruta) {
       <i class="punt ${av ? 'avis' : 'ok'}"></i><span>${esc(o.client)} · ${esc(o.nom)}</span></button>`;
   };
   const acabada = o => !!o.etapes?.[11];
-  const perMaterial = (l, vista) => agrupaPerMaterial(l).map(g => `<div class="sub-mat">${g.material}<b>${g.obres.length}</b></div>${g.obres.map(o => item(o, vista)).join('')}`).join('');
+  const perMaterial = (l, vista) => agrupaPerMaterial(l).map(g => `<div class="sub-mat">${g.material} · ${g.abast === 'Només fabricació' ? 'Només fabr.' : 'Fabr. + munt.'}<b>${g.obres.length}</b></div>${g.obres.map(o => item(o, vista)).join('')}`).join('');
   const seccio = (on, ruta_, titol, n) => `<button class="sub-cap ${on ? 'on' : ''}" data-ruta="${ruta_}"><span>${titol}</span><b>${n}</b></button>`;
   const desplegable = (clau, vista, titol, llista) => {
     const enCurs = llista.filter(o => !acabada(o)), fins = llista.filter(acabada);
