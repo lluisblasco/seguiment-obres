@@ -53,11 +53,9 @@ function despres(arrel) {
       refresca();
     }
     if (b.dataset.cfg === 'z') {
-      const resp = await fetch('data/obres-inicials.json', { cache: 'no-store' }).catch(() => null);
-      if (!resp?.ok) { toast('No trobo el fitxer d\'obres. Obre primer «Actualitzar obres del Z.bat».'); return; }
-      const noves = obresNoves(app.obres, await resp.json());
-      for (const o of noves) await desaObra(o);
-      toast(noves.length ? `${noves.length} obres noves afegides` : 'No hi ha obres noves al Z:');
+      const { afegeixNovesDelZ } = await import('./arrencada.js');
+      const n = await afegeixNovesDelZ({ avisa: false });
+      toast(n ? `${n} obres noves afegides` : 'No hi ha obres noves al Z:');
       refresca();
     }
   });

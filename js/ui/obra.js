@@ -4,7 +4,8 @@ import { topbar } from './shell.js';
 import { esc, toast, confirma, dataCurta, guardaLocal, llegeixLocal, atributsDiners } from '../util.js';
 import { ETAPES, novaObra, etapaActual, avisos, estadistiques, comandesDesDElements, fmtDiners, TIPUS_DIBUIXABLES, campsQueFalten, esFinalitzada, agrupaPerMaterial, ordenaAlfabetic, SUBTASQUES, marcaEtapa, marcaSubtasca, progresSubtasques } from '../model.js';
 import { desaObra } from './arrencada.js';
-import { esborra, desaFoto, fotoURL, esborraFoto } from '../db.js';
+import { esborra, desaFoto, fotoURL, esborraFoto, obte, desa } from '../db.js';
+import { clausObra } from '../seed.js';
 import { comprimeixFoto } from '../fotos.js';
 import { dibuixaElement } from './dibuix.js';
 import { editaElement } from './element.js';
@@ -274,6 +275,9 @@ function despres(arrel, ruta) {
         if (await confirma(`Esborrar l'obra «${o.client} — ${o.nom}» amb tots els seus elements, comandes i fotos? No es pot desfer.`)) {
           for (const f of o.fotos || []) await esborraFoto(f);
           await esborra('obres', o.id);
+          // Es recorda perquè la lectura automàtica del Z: no la torni a afegir
+          const exc = (await obte('config', 'exclosos'))?.claus || [];
+          await desa('config', { id: 'exclosos', claus: [...new Set([...exc, ...clausObra(o)])] });
           app.obres = app.obres.filter(x => x.id !== o.id);
           toast('Obra esborrada');
           navega(`#/${vistaDe(o)}`);
