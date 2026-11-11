@@ -18,19 +18,37 @@ export function renderShell(estat, ruta) {
     return `<button class="sub-item ${on}" data-ruta="#/${vista}/${encodeURIComponent(o.id)}" title="${esc(o.client)} — ${esc(o.nom)}">
       <i class="punt ${av ? 'avis' : 'ok'}"></i><span>${esc(o.client)} · ${esc(o.nom)}</span></button>`;
   };
-  const desplegable = (clau, vista, titol, llista) => `
+  const acabada = o => !!o.etapes?.[11];
+  const seccio = (on, ruta_, titol, n) => `<button class="sub-cap ${on ? 'on' : ''}" data-ruta="${ruta_}"><span>${titol}</span><b>${n}</b></button>`;
+  const desplegable = (clau, vista, titol, llista) => {
+    const enCurs = llista.filter(o => !acabada(o)), fins = llista.filter(acabada);
+    return `
     <details data-menu="${clau}" ${menu[clau] !== false ? 'open' : ''}>
-      <summary><span class="nav ${ruta.vista === vista && !ruta.id ? 'on' : ''}">${ICONA[vista]}${titol}<span class="cnt">${llista.length}</span><span class="fletxa">›</span></span></summary>
-      <div class="sub-llista"><button class="sub-item" data-ruta="#/${vista}"><span>Veure-les totes</span></button>
-      ${llista.length ? llista.map(o => item(o, vista)).join('') : '<div class="sub-buit">Cap de moment</div>'}</div>
+      <summary><span class="nav ${ruta.vista === vista && (!ruta.id || ruta.id === 'finalitzades') ? 'on' : ''}">${ICONA[vista]}${titol}<span class="cnt">${enCurs.length}</span><span class="fletxa">›</span></span></summary>
+      <div class="sub-llista">
+        ${seccio(ruta.vista === vista && !ruta.id, `#/${vista}`, 'En curs', enCurs.length)}
+        ${enCurs.length ? enCurs.map(o => item(o, vista)).join('') : '<div class="sub-buit">Cap de moment</div>'}
+        <details data-menu="${clau}-fin" ${menu[`${clau}-fin`] ? 'open' : ''} class="fin">
+          <summary>${seccio(ruta.vista === vista && ruta.id === 'finalitzades', `#/${vista}/finalitzades`, 'Finalitzades', fins.length)}</summary>
+          ${fins.length ? fins.map(o => item(o, vista)).join('') : '<div class="sub-buit">Cap de moment</div>'}
+        </details>
+      </div>
     </details>`;
+  };
+  const repFin = reparacions.filter(r => r.estat === 'feta' || r.estat === 'facturada').length;
 
   return `
     <div class="marca">${MARCA}<div>Seguiment d'Obres<small>Alutec Delta</small></div></div>
     <button class="nav ${ruta.vista === 'inici' ? 'on' : ''}" data-ruta="#/inici">${ICONA.inici}Inici${ambAvis ? `<span class="cnt avis" title="Obres amb avisos">${ambAvis}</span>` : ''}</button>
     ${desplegable('obres', 'obres', 'Obres', constr)}
     ${desplegable('particulars', 'particulars', 'Particulars', parts)}
-    <div style="border-top:1px solid rgba(255,255,255,.06)"><button class="nav ${ruta.vista === 'reparacions' ? 'on' : ''}" data-ruta="#/reparacions">${ICONA.reparacions}Reparacions${repPend ? `<span class="cnt">${repPend}</span>` : ''}</button></div>
+    <details data-menu="reparacions" ${menu.reparacions !== false ? 'open' : ''}>
+      <summary><span class="nav ${ruta.vista === 'reparacions' ? 'on' : ''}">${ICONA.reparacions}Reparacions<span class="cnt">${repPend}</span><span class="fletxa">›</span></span></summary>
+      <div class="sub-llista">
+        ${seccio(ruta.vista === 'reparacions' && ruta.id !== 'finalitzades', '#/reparacions', 'En curs', repPend)}
+        ${seccio(ruta.vista === 'reparacions' && ruta.id === 'finalitzades', '#/reparacions/finalitzades', 'Finalitzades', repFin)}
+      </div>
+    </details>
     <button class="nav ${ruta.vista === 'config' ? 'on' : ''}" data-ruta="#/config">${ICONA.config}Configuració</button>
     <div class="side-peu" id="estat-dades">Dades desades en aquest dispositiu</div>`;
 }

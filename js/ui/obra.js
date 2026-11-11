@@ -2,7 +2,7 @@
 import { app, registraVista, refresca, navega } from '../main.js';
 import { topbar } from './shell.js';
 import { esc, toast, confirma, dataCurta, guardaLocal, llegeixLocal, atributsDiners } from '../util.js';
-import { ETAPES, novaObra, etapaActual, avisos, estadistiques, comandesDesDElements, fmtDiners, TIPUS_DIBUIXABLES, campsQueFalten } from '../model.js';
+import { ETAPES, novaObra, etapaActual, avisos, estadistiques, comandesDesDElements, fmtDiners, TIPUS_DIBUIXABLES, campsQueFalten, esFinalitzada, SUBTASQUES, marcaEtapa, marcaSubtasca, progresSubtasques } from '../model.js';
 import { desaObra } from './arrencada.js';
 import { esborra, desaFoto, fotoURL, esborraFoto } from '../db.js';
 import { comprimeixFoto } from '../fotos.js';
@@ -17,9 +17,13 @@ const uid = () => crypto.randomUUID();
 // ---------------- Llista ----------------
 function llista(ruta) {
   const tipus = tipusDeVista(ruta.vista);
-  const obres = app.obres.filter(o => o.tipusClient === tipus).sort((a, b) => etapaActual(a) - etapaActual(b) || String(b.numPressupost).localeCompare(String(a.numPressupost)));
-  const titol = ruta.vista === 'obres' ? 'Obres' : 'Particulars';
+  const fin = ruta.id === 'finalitzades';
+  const totes = app.obres.filter(o => o.tipusClient === tipus);
+  const nEnCurs = totes.filter(o => !esFinalitzada(o)).length, nFin = totes.length - nEnCurs;
+  const obres = totes.filter(o => esFinalitzada(o) === fin).sort((a, b) => etapaActual(a) - etapaActual(b) || String(b.numPressupost).localeCompare(String(a.numPressupost)));
+  const titol = `${ruta.vista === 'obres' ? 'Obres' : 'Particulars'} ${fin ? 'finalitzades' : 'en curs'}`;
   return topbar(titol, { sub: `${obres.length}`, amagat: app.amagat, accions: `<button class="btn prim" data-accio="nova-obra" data-tipus="${tipus}">+ Nou${ruta.vista === 'obres' ? 'a obra' : ' particular'}</button>` }) +
+    `<div class="segment"><button class="${fin ? '' : 'on'}" data-ruta="#/${ruta.vista}">En curs<span>${nEnCurs}</span></button><button class="${fin ? 'on' : ''}" data-ruta="#/${ruta.vista}/finalitzades">Finalitzades<span>${nFin}</span></button></div>` +
     (obres.length ? `<div class="targetes">${obres.map(o => {
       const act = etapaActual(o), av = avisos(o), te = av.some(a => a.nivell === 'avis'), s = estadistiques(o);
       return `<button class="card targeta" data-ruta="#/${ruta.vista}/${encodeURIComponent(o.id)}">
@@ -30,7 +34,7 @@ function llista(ruta) {
         <div class="t-et"><b>${o.etapes[11] ? 'Acabada' : esc(ETAPES[act])}</b><span>${o.etapes.filter(Boolean).length} de 12</span></div>
         <span class="pill ${te ? 'avis' : 'ok'}">${te ? '⚠' : '✓'} ${esc((av.find(a => a.nivell === 'avis') || av[0]).text)}</span>
       </button>`;
-    }).join('')}</div>` : `<div class="card buit"><b>Cap ${ruta.vista === 'obres' ? 'obra' : 'particular'} de moment</b>Crea'n una amb el botó de dalt.</div>`);
+    }).join('')}</div>` : `<div class="card buit"><b>Cap ${ruta.vista === 'obres' ? 'obra' : 'particular'} de moment</b>${fin ? "Quan marquis l'etapa «Acabada» d'una obra, apareixerà aquí." : "Crea'n una amb el botó de dalt."}</div>`);
 }
 
 // ---------------- Detall ----------------
@@ -46,7 +50,11 @@ function detall(ruta) {
 
   const etapes = ETAPES.map((nom, i) => `<label class="et-fila ${o.etapes[i] ? 'feta' : i === act ? 'ara' : ''}">
       <input type="checkbox" data-etapa="${i}" ${o.etapes[i] ? 'checked' : ''}><span class="et-check">${o.etapes[i] ? '✓' : i + 1}</span>
-      <span class="et-nom">${esc(nom)}</span><span class="et-data">${o.etapes[i] && o.datesEtapes?.[i] ? dataCurta(o.datesEtapes[i]) : i === act && !o.etapes[i] ? 'ara' : ''}</span></label>`).join('');
+      <span class="et-nom">${esc(nom)}${progresSubtasques(o, i) ? ` <small class="et-prog">${progresSubtasques(o, i).fetes}/${progresSubtasques(o, i).total}</small>` : ''}</span><span class="et-data">${o.etapes[i] && o.datesEtapes?.[i] ? dataCurta(o.datesEtapes[i]) : i === act && !o.etapes[i] ? 'ara' : ''}</span></label>
+      ${progresSubtasques(o, i) ? `<div class="subtasques">${SUBTASQUES.map(st => {
+        const feta = progresSubtasques(o, i) && (o.subtasques?.[i]?.[st] ?? !!o.etapes[i]);
+        return `<label class="sub-fila ${feta ? 'feta' : ''}"><input type="checkbox" data-sub-etapa="${i}" data-sub="${st}" ${feta ? 'checked' : ''}><span class="sub-check">${feta ? '✓' : ''}</span>${esc(st)}</label>`;
+      }).join('')}</div>` : ''}`).join('');
 
   const tabs = [['elements', 'Elements', (o.elements || []).length], ['comandes', 'Comandes', (o.comandes || []).length], ['remats', 'Remats', (o.remats || []).length], ['fotos', 'Fotos', fotosN], ['notes', 'Notes', '']];
   let cos = '';
@@ -181,10 +189,13 @@ function despres(arrel, ruta) {
     const t = e.target;
     if (t.dataset.etapa != null) {
       const i = +t.dataset.etapa;
-      o.etapes[i] = t.checked;
-      o.datesEtapes ||= Array(12).fill(null);
-      o.datesEtapes[i] = t.checked ? new Date().toISOString() : null;
+      marcaEtapa(o, i, t.checked);
       return desaIRefresca(`${ETAPES[i]}: ${t.checked ? 'feta' : 'pendent'}`);
+    }
+    if (t.dataset.sub) {
+      const i = +t.dataset.subEtapa;
+      marcaSubtasca(o, i, t.dataset.sub, t.checked);
+      return desaIRefresca(`${ETAPES[i]} · ${t.dataset.sub}: ${t.checked ? 'fet' : 'pendent'}${o.etapes[i] ? ` — ${ETAPES[i]} completa` : ''}`);
     }
     if (t.dataset.com != null) { o.comandes[+t.dataset.com][t.dataset.camp] = t.value.trim(); await desaObra(o); toast('Comanda desada'); return; }
     if (t.hasAttribute('data-notes')) { o.notes = t.value; await desaObra(o); toast('Notes desades'); return; }
@@ -284,4 +295,5 @@ document.addEventListener('click', e => {
   if (b) novaObraDialeg(b.dataset.tipus || 'Particular');
 });
 
-for (const v of ['obres', 'particulars']) registraVista(v, ruta => (ruta.id ? detall(ruta) : llista(ruta)), despres);
+const esLlista = ruta => !ruta.id || ruta.id === 'finalitzades';
+for (const v of ['obres', 'particulars']) registraVista(v, ruta => (esLlista(ruta) ? llista(ruta) : detall(ruta)), (arrel, ruta) => { if (!esLlista(ruta)) despres(arrel, ruta); });

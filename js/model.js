@@ -25,6 +25,51 @@ export function novaObra(dades = {}) {
   };
 }
 
+// Subtasques de les etapes «Comandes» (5) i «Material rebut» (6)
+export const SUBTASQUES = ['Vidres', 'Carpinteria', 'Ferratge', 'Remateria', 'Silicones', 'Altres'];
+export const ETAPES_AMB_SUBTASQUES = [5, 6];
+
+function subtasquesDe(obra, etapa) {
+  obra.subtasques ||= {};
+  if (!obra.subtasques[etapa]) {
+    // Obres d'abans de les subtasques: si l'etapa ja estava feta, totes compten com a fetes
+    obra.subtasques[etapa] = Object.fromEntries(SUBTASQUES.map(s => [s, !!obra.etapes?.[etapa]]));
+  }
+  return obra.subtasques[etapa];
+}
+
+function posaEtapa(obra, i, valor) {
+  obra.etapes[i] = valor;
+  obra.datesEtapes ||= Array(12).fill(null);
+  if (valor && !obra.datesEtapes[i]) obra.datesEtapes[i] = new Date().toISOString();
+  if (!valor) obra.datesEtapes[i] = null;
+}
+
+export function marcaEtapa(obra, i, valor) {
+  posaEtapa(obra, i, valor);
+  if (ETAPES_AMB_SUBTASQUES.includes(i)) {
+    const st = subtasquesDe(obra, i);
+    for (const s of SUBTASQUES) st[s] = valor;
+  }
+  return obra;
+}
+
+export function marcaSubtasca(obra, etapa, nom, valor) {
+  const st = subtasquesDe(obra, etapa);
+  st[nom] = valor;
+  posaEtapa(obra, etapa, SUBTASQUES.every(s => st[s]));
+  return obra;
+}
+
+export function progresSubtasques(obra, etapa) {
+  if (!ETAPES_AMB_SUBTASQUES.includes(etapa)) return null;
+  const st = obra.subtasques?.[etapa] || Object.fromEntries(SUBTASQUES.map(s => [s, !!obra.etapes?.[etapa]]));
+  return { fetes: SUBTASQUES.filter(s => st[s]).length, total: SUBTASQUES.length };
+}
+
+export const esFinalitzada = obra => !!obra.etapes?.[11];
+export const reparacioFinalitzada = rep => rep.estat === 'feta' || rep.estat === 'facturada';
+
 export function etapaActual(obra) {
   const i = (obra.etapes || []).findIndex(e => !e);
   return i === -1 ? 11 : i;

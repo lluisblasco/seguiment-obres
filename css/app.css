@@ -118,3 +118,18 @@ dialog::backdrop{background:rgba(11,21,48,.45)}
   .topbar .boto-menu{display:inline-grid!important}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---- Seccions En curs / Finalitzades del menú ---- */
+.sub-cap{display:flex;align-items:center;justify-content:space-between;width:100%;padding:6px 18px 6px 46px;font-size:12px;font-weight:700;letter-spacing:.02em;color:#8C99B8;text-align:left}
+.sub-cap b{font-size:11.5px;background:rgba(255,255,255,.08);padding:0 7px;border-radius:999px;color:#C9D2E6}
+.sub-cap:hover,.sub-cap.on{color:#fff}
+.sub-cap.on b{background:var(--contrast);color:var(--mitjanit)}
+.side details.fin{border-top:0}
+.side details.fin > summary{list-style:none}
+.side details.fin > summary .sub-cap{pointer-events:auto}
+.side details.fin .sub-item{opacity:.8}
+.segment{display:inline-flex;gap:4px;background:var(--linia-2);border-radius:12px;padding:4px;margin-bottom:12px}
+.segment button{height:34px;padding:0 14px;border-radius:9px;font-weight:600;font-size:14px;color:var(--text-2);display:flex;align-items:center;gap:6px}
+.segment button span{font-size:12px;background:var(--panell);padding:0 7px;border-radius:999px}
+.segment button.on{background:var(--panell);color:var(--text);box-shadow:var(--ombra)}
+.segment button.on span{background:var(--mitjanit);color:#fff}

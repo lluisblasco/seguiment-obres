@@ -2,7 +2,7 @@
 import { app, registraVista, refresca, navega } from '../main.js';
 import { topbar } from './shell.js';
 import { esc, toast, guardaLocal, llegeixLocal } from '../util.js';
-import { ETAPES, ETAPES_CURT, etapaActual, avisos, fmtDiners, estadistiques } from '../model.js';
+import { ETAPES, ETAPES_CURT, etapaActual, avisos, fmtDiners, estadistiques, marcaEtapa, progresSubtasques, SUBTASQUES } from '../model.js';
 import { desaObra } from './arrencada.js';
 
 const FILTRES = ['Totes', 'Obres', 'Particulars', 'Amb avisos'];
@@ -12,7 +12,7 @@ const acabada = o => o.etapes?.[11];
 
 function render() {
   const filtre = llegeixLocal('so.filtreInici', 'Totes');
-  const totes = [...app.obres].sort((a, b) => etapaActual(a) - etapaActual(b) || String(b.numPressupost).localeCompare(String(a.numPressupost)));
+  const totes = app.obres.filter(o => !o.etapes?.[11]).sort((a, b) => etapaActual(a) - etapaActual(b) || String(b.numPressupost).localeCompare(String(a.numPressupost)));
   const ambAvis = o => avisos(o).some(a => a.nivell === 'avis');
   const llista = totes.filter(o => filtre === 'Obres' ? o.tipusClient === 'Constructora' : filtre === 'Particulars' ? o.tipusClient === 'Particular' : filtre === 'Amb avisos' ? ambAvis(o) : true);
 
@@ -30,8 +30,10 @@ function render() {
     const act = etapaActual(o), av = avisos(o), te = av.some(a => a.nivell === 'avis');
     const cel = (i) => {
       const feta = !!o.etapes?.[i], ara = !feta && i === act;
-      return `<td class="et"><button class="etc ${feta ? 'feta' : ara ? 'ara' : ''}" data-etapa="${i}" data-obra="${o.id}"
-        title="${esc(ETAPES[i])}: ${feta ? 'feta' : 'pendent'} — clica per ${feta ? 'desmarcar' : 'marcar com a feta'}" aria-label="${esc(ETAPES[i])} ${feta ? 'feta' : 'pendent'}">${feta ? '✓' : ''}</button></td>`;
+      const pr = progresSubtasques(o, i), parcial = pr && !feta && pr.fetes > 0;
+      const detall = pr ? ` (${pr.fetes}/${pr.total}: ${SUBTASQUES.map(s => `${s} ${o.subtasques?.[i]?.[s] ?? feta ? '✓' : '·'}`).join(', ')})` : '';
+      return `<td class="et"><button class="etc ${feta ? 'feta' : parcial ? 'parcial' : ara ? 'ara' : ''}" data-etapa="${i}" data-obra="${o.id}"
+        title="${esc(ETAPES[i])}: ${feta ? 'feta' : 'pendent'}${esc(detall)} — clica per ${feta ? 'desmarcar' : 'marcar com a feta'}" aria-label="${esc(ETAPES[i])} ${feta ? 'feta' : 'pendent'}">${feta ? '✓' : parcial ? pr.fetes : ''}</button></td>`;
     };
     return `<tr data-obrir="#/${vistaDe(o)}/${encodeURIComponent(o.id)}">
       <td class="num">${esc(String(o.numPressupost || '').slice(4)) || '—'}</td>
@@ -86,9 +88,7 @@ function despres(arrel) {
       e.stopPropagation();
       const o = app.obres.find(x => x.id === c.dataset.obra);
       const i = +c.dataset.etapa;
-      o.etapes[i] = !o.etapes[i];
-      o.datesEtapes ||= Array(12).fill(null);
-      o.datesEtapes[i] = o.etapes[i] ? new Date().toISOString() : null;
+      marcaEtapa(o, i, !o.etapes[i]);
       await desaObra(o);
       toast(`${o.client}: ${ETAPES[i]} ${o.etapes[i] ? 'feta' : 'pendent'}`);
       refresca();

@@ -2,7 +2,7 @@
 import { app, registraVista, refresca, navega } from '../main.js';
 import { topbar } from './shell.js';
 import { esc, toast, confirma, dataCurta, guardaLocal, llegeixLocal, atributsDiners } from '../util.js';
-import { totalReparacio, fmtDiners, ordenaReparacions } from '../model.js';
+import { totalReparacio, fmtDiners, ordenaReparacions, reparacioFinalitzada } from '../model.js';
 import { desaReparacio } from './arrencada.js';
 import { esborra, obte, desaFoto, fotoURL, esborraFoto } from '../db.js';
 import { comprimeixFoto, fotosAEsborrar } from '../fotos.js';
@@ -15,15 +15,15 @@ export async function preuHoraPerDefecte() {
   return (await obte('config', 'preuHora'))?.valor ?? 35;
 }
 
-function llista() {
-  const filtre = llegeixLocal('so.filtreRep', 'Totes');
+function llista(ruta) {
+  const fin = ruta?.id === 'finalitzades';
   const reps = ordenaReparacions(app.reparacions);
-  const perFiltre = { Pendents: 'pendent', Fetes: 'feta', Facturades: 'facturada' };
-  const vis = reps.filter(r => filtre === 'Totes' || r.estat === perFiltre[filtre]);
+  const nFin = reps.filter(reparacioFinalitzada).length, nEnCurs = reps.length - nFin;
+  const vis = reps.filter(r => reparacioFinalitzada(r) === fin);
   const tot = vis.reduce((a, r) => { const t = totalReparacio(r); a.h += +r.hores || 0; a.mo += t.maObra; a.mat += t.material; a.v += valoracio(r); return a; }, { h: 0, mo: 0, mat: 0, v: 0 });
   const D = (v) => fmtDiners(v, app.amagat, 2);
-  return topbar('Reparacions', { sub: `${reps.filter(r => r.estat === 'pendent').length} pendents`, amagat: app.amagat, accions: '<button class="btn prim" data-accio-r="nova">+ Nova reparació</button>' }) + `
-  <div class="filtres">${['Totes', 'Pendents', 'Fetes', 'Facturades'].map(f => `<button class="opt ${f === filtre ? 'on' : ''}" data-filtre-r="${f}">${f}</button>`).join('')}</div>
+  return topbar(fin ? 'Reparacions finalitzades' : 'Reparacions en curs', { sub: `${vis.length}`, amagat: app.amagat, accions: '<button class="btn prim" data-accio-r="nova">+ Nova reparació</button>' }) + `
+  <div class="segment"><button class="${fin ? '' : 'on'}" data-ruta="#/reparacions">En curs<span>${nEnCurs}</span></button><button class="${fin ? 'on' : ''}" data-ruta="#/reparacions/finalitzades">Finalitzades<span>${nFin}</span></button></div>
   ${vis.length ? `<div class="card taula-wrap"><table class="taula-rep">
     <thead><tr><th>Data</th><th>Client / obra</th><th>Ubicació</th><th>Telèfon</th><th>Què es repara</th><th class="n">Hores</th><th class="n">Mà d'obra</th><th class="n">Material</th><th class="n">Valoració</th><th>Estat</th></tr></thead>
     <tbody>${vis.map(r => { const t = totalReparacio(r); return `<tr data-rep="${r.id}">
@@ -159,7 +159,7 @@ function despres(arrel, ruta) {
     const tr = e.target.closest('tr[data-rep]');
     if (tr) obre(app.reparacions.find(r => r.id === tr.dataset.rep));
   });
-  if (ruta.id) { const r = app.reparacions.find(x => x.id === ruta.id); if (r) obre(r); }
+  if (ruta.id && ruta.id !== 'finalitzades') { const r = app.reparacions.find(x => x.id === ruta.id); if (r) obre(r); }
 }
 
 registraVista('reparacions', llista, despres);
