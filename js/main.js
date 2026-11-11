@@ -47,7 +47,12 @@ document.addEventListener('click', e => {
     arrel.classList.remove('menu-obert'); return;
   }
   const r = e.target.closest('[data-ruta]');
-  if (r) { e.preventDefault(); navega(r.dataset.ruta); return; }
+  if (r) {
+    e.preventDefault();
+    // Seccions Alumini / PVC del menú: també canvien el filtre de material
+    if (r.dataset.mat) { app.filtreMat = r.dataset.mat; guardaLocal('so.filtreMat', app.filtreMat); }
+    navega(r.dataset.ruta); return;
+  }
   const a = e.target.closest('[data-accio]');
   if (!a) return;
   if (a.dataset.accio === 'mat') { app.filtreMat = a.dataset.mat; guardaLocal('so.filtreMat', app.filtreMat); refresca(); return; }

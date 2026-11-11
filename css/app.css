@@ -142,3 +142,13 @@ dialog::backdrop{background:rgba(11,21,48,.45)}
 .filtre-mat button{flex:1;height:30px;border-radius:7px;font-size:13px;font-weight:600;color:#AEB9D2}
 .filtre-mat button:hover{color:#fff}
 .filtre-mat button.on{background:var(--contrast);color:var(--mitjanit)}
+/* ---- Blocs Alumini / PVC dins d'Obres i Particulars ---- */
+.side details.mat{border-top:0}
+.side details.mat > summary{list-style:none}
+.sub-matcap{display:flex;align-items:center;justify-content:space-between;padding:8px 18px 4px 40px;font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--contrast);cursor:pointer}
+.sub-matcap::before{content:'›';display:inline-block;margin-right:6px;transition:transform .15s;color:#8C99B8}
+.side details.mat[open] > summary .sub-matcap::before{transform:rotate(90deg)}
+.sub-matcap b{font-size:11px;background:rgba(232,163,61,.18);color:var(--contrast);padding:0 7px;border-radius:999px;margin-left:auto}
+.side details.mat .sub-cap{padding-left:54px}
+.side details.mat .sub-item{padding-left:58px}
+.side details.mat .sub-buit{padding-left:58px}
