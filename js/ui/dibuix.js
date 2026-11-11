@@ -12,7 +12,9 @@ const C = {
 
 export const PARTS = ['Practicable E', 'Practicable D', 'Oscil·lobatent E', 'Oscil·lobatent D', 'Corredissa', 'Fix',
   'Porta E', 'Porta D', 'Montant fix', 'Montant abatible'];
-export const TIPUS_MOSQUITERA = ['Enrotllable vertical', 'Enrotllable lateral', 'Plisada', 'Corredissa', 'Abatible', 'Fixa'];
+// Tipus del catàleg de mosquiteres Saxun (saxun.com/mosquiteras)
+export const TIPUS_MOSQUITERA = ['Enrotllable', 'Antivent (zip)', 'Plisada lateral', 'Plisada vertical', 'Plisada reversible',
+  'Lateral (porta)', 'Corredissa', 'Abatible (porta)', 'Fixa'];
 
 let idSvg = 0;
 const r1 = n => Math.round(n * 10) / 10;
@@ -34,11 +36,12 @@ export function liniesObertura(part, { x, y, w, h }) {
 export function tipusMosquitera(text) {
   const t = String(text || '').toLowerCase();
   if (!t || t === 'no') return null;
-  if (/plis/.test(t)) return 'Plisada';
-  if (/(enrot|enroll|enrol)/.test(t)) return /lateral|horitz|horiz/.test(t) ? 'Enrotllable lateral' : 'Enrotllable vertical';
+  if (/plis/.test(t)) return /revers/.test(t) ? 'Plisada reversible' : /vertical/.test(t) ? 'Plisada vertical' : 'Plisada lateral';
+  if (/antivi|antiv|zip|cremall/.test(t)) return 'Antivent (zip)';
+  if (/lateral/.test(t)) return 'Lateral (porta)';
+  if (/(enrot|enroll|enrol)/.test(t)) return 'Enrotllable';
   if (/corred/.test(t)) return 'Corredissa';
-  if (/abat|batent|practic/.test(t)) return 'Abatible';
-  if (/fix|fij/.test(t)) return 'Fixa';
+  if (/abat|batent|practic/.test(t)) return 'Abatible (porta)';
   return 'Fixa';
 }
 
@@ -146,7 +149,8 @@ export function dibuixaMosquitera(tipus, el = {}, { W = 300, H = 200, cotes: amb
   const marc = (x, y, mw, mh, gruix = f) => `<rect x="${r1(x)}" y="${r1(y)}" width="${r1(mw)}" height="${r1(mh)}" rx="2" fill="${C.marc}"/><rect x="${r1(x + gruix)}" y="${r1(y + gruix)}" width="${r1(mw - 2 * gruix)}" height="${r1(mh - 2 * gruix)}" fill="#fff"/>`;
 
   switch (tipus) {
-    case 'Enrotllable vertical': {
+    case 'Enrotllable':
+    case 'Antivent (zip)': {
       const caixo = Math.max(12, h * .1), baixa = h * .62;
       g += `<rect x="${r1(x0 - 3)}" y="${r1(y0 - 2)}" width="${r1(w + 6)}" height="${r1(caixo)}" rx="3" fill="${C.caixo}"/>`;
       g += `<rect x="${r1(x0)}" y="${r1(y0 + caixo - 2)}" width="${r1(f)}" height="${r1(h - caixo + 2)}" fill="${C.guia}"/><rect x="${r1(x0 + w - f)}" y="${r1(y0 + caixo - 2)}" width="${r1(f)}" height="${r1(h - caixo + 2)}" fill="${C.guia}"/>`;
@@ -154,9 +158,14 @@ export function dibuixaMosquitera(tipus, el = {}, { W = 300, H = 200, cotes: amb
       g += `<rect x="${r1(x0 + f)}" y="${r1(y0 + caixo + baixa)}" width="${r1(w - 2 * f)}" height="${r1(f * .9)}" rx="1.5" fill="${C.marc}"/>`;
       g += `<rect x="${r1(x0 + w / 2 - 9)}" y="${r1(y0 + caixo + baixa + f * .9)}" width="18" height="4" rx="2" fill="${C.linia}"/>`;
       g += `<path d="M${r1(x0 + w / 2)} ${r1(y0 + caixo + baixa + 14)} v${r1(Math.min(22, h * .14))} m-5 -6 l5 6 l5 -6" stroke="${C.linia}" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+      if (tipus === 'Antivent (zip)') {   // guia de cremallera: dents a les dues guies
+        for (let yy = y0 + caixo + 2; yy < y0 + h - 2; yy += 5) {
+          g += `<path d="M${r1(x0 + f)} ${r1(yy)} h3 M${r1(x0 + w - f)} ${r1(yy + 2.5)} h-3" stroke="${C.contrast || '#E8A33D'}" stroke-width="1.6"/>`;
+        }
+      }
       break;
     }
-    case 'Enrotllable lateral': {
+    case 'Lateral (porta)': {
       const caixo = Math.max(12, w * .1), obert = w * .6;
       g += `<rect x="${r1(x0)}" y="${r1(y0)}" width="${r1(caixo)}" height="${r1(h)}" rx="3" fill="${C.caixo}"/>`;
       g += `<rect x="${r1(x0 + caixo - 2)}" y="${r1(y0)}" width="${r1(w - caixo + 2)}" height="${r1(f)}" fill="${C.guia}"/><rect x="${r1(x0 + caixo - 2)}" y="${r1(y0 + h - f)}" width="${r1(w - caixo + 2)}" height="${r1(f)}" fill="${C.guia}"/>`;
@@ -166,7 +175,7 @@ export function dibuixaMosquitera(tipus, el = {}, { W = 300, H = 200, cotes: amb
       g += fletxa(x0 + caixo + obert + 14, x0 + caixo + obert + Math.min(30, (w - caixo - obert) * .8), y0 + h / 2 + 22);
       break;
     }
-    case 'Plisada': {
+    case 'Plisada lateral': {
       const plecs = Math.max(4, Math.round(w / 18)), plegat = w * .16, obert = w * .5;
       g += marc(x0, y0, w, h, f * .8);
       const xi = x0 + f;
@@ -195,7 +204,7 @@ export function dibuixaMosquitera(tipus, el = {}, { W = 300, H = 200, cotes: amb
       g += fletxa(x0 + f + pw + 8, Math.min(x0 + w - 6, x0 + f + pw + 40), y0 + h / 2);
       break;
     }
-    case 'Abatible': {
+    case 'Abatible (porta)': {
       g += marc(x0, y0, w, h, f * .7);
       g += `<rect x="${r1(x0 + f * .7)}" y="${r1(y0 + f * .7)}" width="${r1(w - f * 1.4)}" height="${r1(h - f * 1.4)}" rx="1.5" fill="${C.fulla}"/>`;
       const v = { x: x0 + f * 1.6, y: y0 + f * 1.6, w: w - f * 3.2, h: h - f * 3.2 };
@@ -203,6 +212,27 @@ export function dibuixaMosquitera(tipus, el = {}, { W = 300, H = 200, cotes: amb
       for (const l of liniesObertura('Practicable E', v)) g += polilinia(l);
       g += maneta(x0 + w - f * 1.15, y0 + h / 2, -1);
       for (const yy of [y0 + h * .2, y0 + h * .8]) g += `<rect x="${r1(x0 + f * .3)}" y="${r1(yy - 5)}" width="${r1(f * .8)}" height="10" rx="1" fill="${C.linia}"/>`;
+      break;
+    }
+    case 'Plisada vertical': {
+      g += marc(x0, y0, w, h, f * .8);
+      const yi = y0 + f, plecs = Math.max(4, Math.round(h / 22)), plegat = h * .12, obert = h * .5;
+      g += `<rect x="${r1(x0 + f)}" y="${r1(yi)}" width="${r1(w - 2 * f)}" height="${r1(plegat + obert)}" fill="url(#m${id})"/>`;
+      for (let i = 0; i <= plecs; i++) g += `<path d="M${r1(x0 + f)} ${r1(yi + (plegat / plecs) * i)} H${r1(x0 + w - f)}" stroke="${C.malla}" stroke-width="${i % 2 ? .6 : 1.1}"/>`;
+      for (let i = 1; i < 6; i++) g += `<path d="M${r1(x0 + f)} ${r1(yi + plegat + (obert / 6) * i)} H${r1(x0 + w - f)}" stroke="${C.malla}" stroke-width=".7" stroke-dasharray="2 3"/>`;
+      g += `<rect x="${r1(x0 + f)}" y="${r1(yi + plegat + obert)}" width="${r1(w - 2 * f)}" height="${r1(f)}" rx="1.5" fill="${C.marc}"/>`;
+      g += `<rect x="${r1(x0 + w / 2 - 9)}" y="${r1(yi + plegat + obert + f)}" width="18" height="4" rx="2" fill="${C.linia}"/>`;
+      g += `<path d="M${r1(x0 + w / 2)} ${r1(yi + plegat + obert + f + 10)} v${r1(Math.min(22, h * .14))} m-5 -6 l5 6 l5 -6" stroke="${C.linia}" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+      break;
+    }
+    case 'Plisada reversible': {
+      g += marc(x0, y0, w, h, f * .8);
+      const xc = x0 + w / 2, plegat = w * .1, plecs = Math.max(4, Math.round(w / 22));
+      g += `<rect x="${r1(x0 + f)}" y="${r1(y0 + f)}" width="${r1(w - 2 * f)}" height="${r1(h - 2 * f)}" fill="url(#m${id})"/>`;
+      for (let i = 0; i <= plecs; i++) g += `<path d="M${r1(xc - plegat / 2 + (plegat / plecs) * i)} ${r1(y0 + f)} V${r1(y0 + h - f)}" stroke="${C.malla}" stroke-width="${i % 2 ? .6 : 1.1}"/>`;
+      for (const xb of [xc - plegat / 2 - f, xc + plegat / 2]) g += `<rect x="${r1(xb)}" y="${r1(y0 + f)}" width="${r1(f)}" height="${r1(h - 2 * f)}" rx="1.5" fill="${C.marc}"/>`;
+      g += fletxa(xc - plegat / 2 - f - 6, Math.max(x0 + f + 6, xc - plegat / 2 - f - 34), y0 + h / 2 + 22);
+      g += fletxa(xc + plegat / 2 + f + 6, Math.min(x0 + w - f - 6, xc + plegat / 2 + f + 34), y0 + h / 2 + 22);
       break;
     }
     default: { // Fixa
