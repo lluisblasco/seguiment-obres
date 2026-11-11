@@ -1,14 +1,14 @@
 // Diàleg per crear/editar un element d'una obra (finestra, porta, barana, pèrgola...)
 import { esc } from '../util.js';
 import { TIPUS_ELEMENT, TIPUS_DIBUIXABLES, campsQueFalten } from '../model.js';
-import { dibuixaElement, PARTS } from './dibuix.js';
+import { dibuixaElement, PARTS, TIPUS_MOSQUITERA, tipusMosquitera } from './dibuix.js';
 
 const OPC = {
   serie: ['COR-70', 'COR-70 Hoja Oculta', 'COR-80', 'Millennium Plus', 'Cor Vision', 'Premiline 6040', 'Premiline 6041', '76 AD', '76 MD'],
   color: ['Blanc', 'Blanco mate', 'RAL 7016', 'RAL 9005', 'Anoditzat', 'Imitació fusta'],
   vidre: ['4/16/4', '4/16/4 mat', '3+3/16/4', '3+3/16/3+3', '6 BE/20/3+3', '4/12/4/12/4'],
   persiana: ['No', 'Monobloc', 'Caixó túnel', 'Tapa de registre'],
-  mosquitera: ['No', 'Enrotllable', 'Corredissa', 'Plisada'],
+  mosquitera: ['No', ...TIPUS_MOSQUITERA],
 };
 
 const camp = (nom, etiqueta, valor, extra = '') =>
@@ -19,6 +19,9 @@ export function editaElement(elInicial, { titol = 'Element' } = {}) {
   return new Promise(res => {
     const el = structuredClone(elInicial);
     el.parts ||= [];
+    // Mosquiteres antigues («Enrotllable», «Mosquitera plisada»...) passen al tipus normalitzat
+    if (el.mosquitera && el.mosquitera !== 'No' && !TIPUS_MOSQUITERA.includes(el.mosquitera)) el.mosquitera = tipusMosquitera(el.mosquitera);
+    if (el.tipus === 'Mosquitera' && !el.mosquitera) el.mosquitera = tipusMosquitera(el.descripcio) || 'Enrotllable vertical';
     const d = document.createElement('dialog');
     d.className = 'dlg-element';
     const pinta = () => {
@@ -27,7 +30,7 @@ export function editaElement(elInicial, { titol = 'Element' } = {}) {
       d.innerHTML = `<form method="dialog">
         <div class="dlg-cap">${esc(titol)} ${esc(el.ref || '')}</div>
         <div class="dlg-cos el-cos">
-          <div class="el-dibuix"><div id="el-svg">${dibuixaElement(el, { W: 320, H: 240 })}</div>
+          <div class="el-dibuix"><div id="el-svg">${dibuixaElement(el, { W: 340, H: 260, cotes: true })}</div>
             <p class="${falten.length ? 'falta' : 'complet'}">${falten.length ? `Falta: ${falten.join(', ')}` : 'Fitxa completa'}</p></div>
           <div class="el-camps">
             <div class="camp"><label>Tipus</label><div class="opts">${TIPUS_ELEMENT.map(t => `<button type="button" class="opt ${el.tipus === t ? 'on' : ''}" data-tipus="${t}">${t}</button>`).join('')}</div></div>
@@ -47,6 +50,7 @@ export function editaElement(elInicial, { titol = 'Element' } = {}) {
               <div class="camp"><label>Persiana</label><div class="opts">${OPC.persiana.map(v => `<button type="button" class="opt ${el.persiana === v ? 'on' : ''}" data-set="persiana" data-v="${v}">${v}</button>`).join('')}</div></div>
               <div class="camp"><label>Mosquitera</label><div class="opts">${OPC.mosquitera.map(v => `<button type="button" class="opt ${el.mosquitera === v ? 'on' : ''}" data-set="mosquitera" data-v="${v}">${v}</button>`).join('')}</div></div>
             </div>` : ''}
+            ${el.tipus === 'Mosquitera' ? `<div class="camp"><label>Tipus de mosquitera</label><div class="opts">${TIPUS_MOSQUITERA.map(v => `<button type="button" class="opt ${el.mosquitera === v ? 'on' : ''}" data-set="mosquitera" data-v="${v}">${v}</button>`).join('')}</div></div>` : ''}
             <div class="camp"><label for="el-descripcio">Descripció i observacions</label><textarea class="inp" id="el-descripcio" name="descripcio" placeholder="Tot el que s'ha parlat amb el client...">${esc(el.descripcio || '')}</textarea></div>
           </div>
           ${llistaOpc('serie')}${llistaOpc('color')}${llistaOpc('vidre')}
@@ -62,7 +66,7 @@ export function editaElement(elInicial, { titol = 'Element' } = {}) {
         el[i.name] = ['q', 'w', 'h'].includes(i.name) ? (v === '' ? '' : +v) : v;
       }
     };
-    const redibuixa = () => { llegeix(); d.querySelector('#el-svg').innerHTML = dibuixaElement(el, { W: 320, H: 240 }); };
+    const redibuixa = () => { llegeix(); d.querySelector('#el-svg').innerHTML = dibuixaElement(el, { W: 340, H: 260, cotes: true }); };
     pinta();
     d.addEventListener('input', e => { if (['w', 'h'].includes(e.target.name)) redibuixa(); });
     d.addEventListener('change', e => { if (e.target.dataset.part != null) { llegeix(); el.parts[+e.target.dataset.part] = e.target.value; pinta(); } });
