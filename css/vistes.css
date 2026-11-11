@@ -263,3 +263,6 @@ button.etc:hover{transform:scale(1.15);border-color:var(--mitjanit-4)}
 .grup-mat span{font-size:12px;background:var(--mitjanit);color:#fff;padding:1px 9px;border-radius:999px}
 .targetes + .grup-mat{margin-top:22px}
 .t-cap .diners{white-space:nowrap;flex:none}
+.graella-sincro{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 14px;max-width:760px}
+.graella-sincro .barra-acc{grid-column:1/-1}
+.foto-absent{display:grid;place-items:center;aspect-ratio:1;border-radius:10px;background:var(--fons-2,#eef1f7);color:var(--text-2,#6b7385);font-size:12px;text-align:center;padding:6px}

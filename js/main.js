@@ -67,7 +67,7 @@ document.addEventListener('toggle', e => {
 window.addEventListener('hashchange', refresca);
 
 // Arrencada: els mòduls de vistes es registren en importar-se
-const moduls = ['./ui/arrencada.js', './ui/inici.js', './ui/obra.js', './ui/reparacions.js', './ui/config.js'];
+const moduls = ['./ui/arrencada.js', './ui/inici.js', './ui/obra.js', './ui/reparacions.js', './ui/config.js', './ui/sincronitza.js'];
 Promise.all(moduls.map(m => import(m).catch(err => console.warn('Mòdul no disponible:', m, err.message))))
   .then(refresca);
 

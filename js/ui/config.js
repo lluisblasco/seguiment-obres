@@ -5,6 +5,7 @@ import { esc, toast, confirma, dataCurta } from '../util.js';
 import { exportaTot, importaTot, obte, desa } from '../db.js';
 import { obresNoves } from '../seed.js';
 import { recarregaDades, desaObra } from './arrencada.js';
+import { configSincro, connecta, desconnecta, sincronitza } from './sincronitza.js';
 
 async function render() {
   const preu = (await obte('config', 'preuHora'))?.valor ?? 35;
@@ -12,7 +13,23 @@ async function render() {
   const est = await navigator.storage?.estimate?.().catch(() => null);
   const mb = est ? (est.usage / 1e6).toFixed(1) : '?';
   const local = ['localhost', '127.0.0.1'].includes(location.hostname);
+  const sc = await configSincro();
+  const hora = d => d ? new Date(d).toLocaleString('ca-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'mai';
+  const sincro = sc ? `<section class="card"><h3>Sincronització mòbil ↔ ordinador</h3>
+      <p class="nota">Connectat com a <b>${esc(sc.email)}</b>. Els canvis es passen sols a l'altre aparell quan hi ha connexió (també funciona sense: s'envia en tornar a tenir cobertura). Les fotos, de moment, es queden a l'aparell on es fan.</p>
+      <p class="nota">Darrera sincronització: <b>${hora(sc.darrera)}</b>${sc.error ? ` · <span style="color:var(--perill,#c0392b)">${esc(sc.error)}</span>` : ''}</p>
+      <div class="barra-acc"><button class="btn prim" data-cfg="sincro-ara">Sincronitzar ara</button><button class="btn" data-cfg="sincro-surt">Desconnectar</button></div></section>`
+    : `<section class="card"><h3>Sincronització mòbil ↔ ordinador</h3>
+      <p class="nota">Per tenir les mateixes obres al mòbil i a l'ordinador sense passar fitxers. Omple-ho tu amb les dades del teu compte de Supabase (a l'ordinador i al mòbil, les mateixes). La contrasenya no es desa.</p>
+      <form data-cfg-sincro class="graella-sincro">
+        <div class="camp"><label for="sc-url">Adreça del projecte (Project URL)</label><input class="inp" id="sc-url" name="url" type="url" required autocomplete="off" placeholder="https://xxxx.supabase.co"></div>
+        <div class="camp"><label for="sc-clau">Clau pública (anon / publishable key)</label><input class="inp" id="sc-clau" name="clau" required autocomplete="off"></div>
+        <div class="camp"><label for="sc-email">Correu de l'usuari</label><input class="inp" id="sc-email" name="email" type="email" required autocomplete="username"></div>
+        <div class="camp"><label for="sc-pass">Contrasenya de l'usuari</label><input class="inp" id="sc-pass" name="contrasenya" type="password" required autocomplete="current-password"></div>
+        <div class="barra-acc"><button class="btn prim" type="submit">Connectar</button></div>
+      </form></section>`;
   return topbar('Configuració', { amagat: app.amagat }) + `<div class="config">
+    ${sincro}
     <section class="card"><h3>Còpia de seguretat</h3>
       <p class="nota">Les dades es desen en aquest ${local ? 'ordinador' : 'dispositiu'}, dins de l'app (${mb} MB ara mateix). Fes una còpia de tant en tant${local ? ' i guarda-la al Z: o a un llapis USB' : ' i envia-te-la (WhatsApp, correu o Archivos)'}. Per passar les dades d'un aparell a un altre: descarrega la còpia en un i restaura-la a l'altre.</p>
       <p class="nota">Última còpia: <b>${ultima ? dataCurta(ultima) : 'mai'}</b></p>
@@ -31,6 +48,14 @@ async function render() {
 }
 
 function despres(arrel) {
+  arrel.addEventListener('submit', async e => {
+    if (!e.target.hasAttribute('data-cfg-sincro')) return;
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target));
+    toast('Connectant...');
+    try { const r = await connecta(d); toast(`Connectat. ${r?.rebudes || 0} canvis rebuts, ${r?.enviades || 0} enviats`); refresca(); }
+    catch (err) { toast(err.message || "No s'ha pogut connectar"); }
+  });
   arrel.addEventListener('change', async e => {
     if (e.target.id === 'cfg-preu') { await desa('config', { id: 'preuHora', valor: +e.target.value || 0 }); toast('Preu per hora desat'); }
     if (e.target.hasAttribute('data-cfg-importa')) {
@@ -52,6 +77,12 @@ function despres(arrel) {
       await desa('config', { id: 'ultimaCopia', data: new Date().toISOString() });
       refresca();
     }
+    if (b.dataset.cfg === 'sincro-ara') {
+      toast('Sincronitzant...');
+      try { const r = await sincronitza(); toast(r ? `Fet: ${r.rebudes} rebuts, ${r.enviades} enviats` : 'Sense connexió'); } catch (err) { toast(err.message); }
+      refresca();
+    }
+    if (b.dataset.cfg === 'sincro-surt' && await confirma("Desconnectar aquest aparell del núvol? Les dades d'aquí no s'esborren.", { boto: 'Desconnectar' })) { await desconnecta(); refresca(); }
     if (b.dataset.cfg === 'z') {
       const { afegeixNovesDelZ } = await import('./arrencada.js');
       const n = await afegeixNovesDelZ({ avisa: false });

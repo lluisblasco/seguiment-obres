@@ -84,7 +84,7 @@ function formulari(r, { titol }) {
       </div><div class="dlg-peu">
         ${r.id ? '<button type="button" class="btn perill" data-esborra-rep style="margin-right:auto">Esborrar</button>' : ''}
         <button type="button" class="btn" data-cancela>Cancel·lar</button><button class="btn prim">Desar</button></div></form>`;
-      d.querySelectorAll('img[data-src]').forEach(async img => { img.src = await fotoURL(img.dataset.src); });
+      d.querySelectorAll('img[data-src]').forEach(async img => { const u = await fotoURL(img.dataset.src); if (u) img.src = u; else img.alt = "Foto a l'altre aparell"; });
     };
     const llegeix = () => {
       const f = d.querySelector('form');

@@ -32,8 +32,32 @@ async function tx(store, mode, fn) {
 
 export const llista = store => tx(store, 'readonly', s => s.getAll());
 export const obte = (store, id) => tx(store, 'readonly', s => s.get(id));
-export const desa = (store, obj) => tx(store, 'readwrite', s => { s.put(structuredClone(obj)); return obj; });
-export const esborra = (store, id) => tx(store, 'readwrite', s => s.delete(id));
+// Obres i reparacions es marquen amb l'hora del canvi (_mod) per a la sincronització mòbil ↔ ordinador
+const SINCRO = ['obres', 'reparacions'];
+export let enCanviar = () => {};
+export const quanCanvii = fn => { enCanviar = fn; };
+export const desa = async (store, obj) => {
+  if (SINCRO.includes(store)) obj._mod = new Date().toISOString();
+  await tx(store, 'readwrite', s => { s.put(structuredClone(obj)); });
+  if (SINCRO.includes(store)) enCanviar();
+  return obj;
+};
+// Desa sense tocar l'hora (dades que arriben del núvol)
+export const desaCru = (store, obj) => tx(store, 'readwrite', s => { s.put(structuredClone(obj)); });
+export const esborraCru = (store, id) => tx(store, 'readwrite', s => s.delete(id));
+export async function esborra(store, id) {
+  if (SINCRO.includes(store)) {
+    const o = await obte(store, id);
+    if (o) {
+      const llistaEsb = (await obte('config', 'esborrats'))?.items || [];
+      const claus = store === 'obres' ? [o.numPressupost, o.carpeta].filter(Boolean) : [];
+      llistaEsb.push({ taula: store, id, mod: new Date().toISOString(), claus });
+      await desaCru('config', { id: 'esborrats', items: llistaEsb });
+    }
+  }
+  await esborraCru(store, id);
+  if (SINCRO.includes(store)) enCanviar();
+}
 
 // ---------- Fotos ----------
 const urls = new Map();

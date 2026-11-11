@@ -179,7 +179,7 @@ export async function novaObraDialeg(tipus = 'Particular') {
 
 // ---------------- Esdeveniments del detall ----------------
 async function carregaFotos(arrel) {
-  for (const img of arrel.querySelectorAll('img[data-src]')) img.src = await fotoURL(img.dataset.src);
+  for (const img of arrel.querySelectorAll('img[data-src]')) { const u = await fotoURL(img.dataset.src); if (u) img.src = u; else img.replaceWith(Object.assign(document.createElement('span'), { className: 'foto-absent', textContent: "Foto a l'altre aparell" })); }
 }
 
 function despres(arrel, ruta) {
