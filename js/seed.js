@@ -70,6 +70,7 @@ export function passaMinim(x) {
 
 // Afegeix les obres noves del Z: que encara no hi són (per número de pressupost o carpeta) i passen l'import mínim
 export function obresNoves(existents, registres) {
-  const claus = new Set(existents.flatMap(o => [o.numPressupost, o.carpeta].filter(Boolean)));
+  // També compten les carpetes que s'han agrupat dins d'una altra obra (p. ex. Spacioforma Buzones dins de Vias)
+  const claus = new Set(existents.flatMap(o => [o.numPressupost, o.carpeta, ...(o.carpetesAgrupades || [])].filter(Boolean)));
   return obresDesDeImportacio(registres.filter(r => !claus.has(r.num) && !claus.has(r.carpeta) && passaMinim(r)));
 }
