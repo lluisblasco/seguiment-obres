@@ -67,6 +67,13 @@ export function progresSubtasques(obra, etapa) {
   return { fetes: SUBTASQUES.filter(s => st[s]).length, total: SUBTASQUES.length };
 }
 
+// Grups per material, en aquest ordre; la resta de materials van a «Altres». Els grups buits no surten.
+export function agrupaPerMaterial(obres = []) {
+  const grups = { Alumini: [], PVC: [], Altres: [] };
+  for (const o of obres) (grups[o.material === 'Alumini' || o.material === 'PVC' ? o.material : 'Altres']).push(o);
+  return Object.entries(grups).filter(([, l]) => l.length).map(([material, l]) => ({ material, obres: l }));
+}
+
 export const esFinalitzada = obra => !!obra.etapes?.[11];
 export const reparacioFinalitzada = rep => rep.estat === 'feta' || rep.estat === 'facturada';
 

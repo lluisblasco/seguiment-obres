@@ -1,5 +1,6 @@
 import { esc } from '../util.js';
 import { ICONA } from './icones.js';
+import { agrupaPerMaterial } from '../model.js';
 
 const MARCA = `<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="1" y="1" width="28" height="28" rx="7" fill="#22376B"/><rect x="6" y="6" width="8.5" height="18" rx="1.5" fill="#D8E6F5"/><rect x="15.5" y="6" width="8.5" height="18" rx="1.5" fill="#D8E6F5"/><path d="M14.5 6 L6.5 15 L14.5 24" stroke="#E8A33D" stroke-width="1.4" stroke-dasharray="2.6 1.6" fill="none"/></svg>`;
 
@@ -19,6 +20,7 @@ export function renderShell(estat, ruta) {
       <i class="punt ${av ? 'avis' : 'ok'}"></i><span>${esc(o.client)} · ${esc(o.nom)}</span></button>`;
   };
   const acabada = o => !!o.etapes?.[11];
+  const perMaterial = (l, vista) => agrupaPerMaterial(l).map(g => `<div class="sub-mat">${g.material}<b>${g.obres.length}</b></div>${g.obres.map(o => item(o, vista)).join('')}`).join('');
   const seccio = (on, ruta_, titol, n) => `<button class="sub-cap ${on ? 'on' : ''}" data-ruta="${ruta_}"><span>${titol}</span><b>${n}</b></button>`;
   const desplegable = (clau, vista, titol, llista) => {
     const enCurs = llista.filter(o => !acabada(o)), fins = llista.filter(acabada);
@@ -27,10 +29,10 @@ export function renderShell(estat, ruta) {
       <summary><span class="nav ${ruta.vista === vista && (!ruta.id || ruta.id === 'finalitzades') ? 'on' : ''}">${ICONA[vista]}${titol}<span class="cnt">${enCurs.length}</span><span class="fletxa">›</span></span></summary>
       <div class="sub-llista">
         ${seccio(ruta.vista === vista && !ruta.id, `#/${vista}`, 'En curs', enCurs.length)}
-        ${enCurs.length ? enCurs.map(o => item(o, vista)).join('') : '<div class="sub-buit">Cap de moment</div>'}
+        ${enCurs.length ? perMaterial(enCurs, vista) : '<div class="sub-buit">Cap de moment</div>'}
         <details data-menu="${clau}-fin" ${menu[`${clau}-fin`] ? 'open' : ''} class="fin">
           <summary>${seccio(ruta.vista === vista && ruta.id === 'finalitzades', `#/${vista}/finalitzades`, 'Finalitzades', fins.length)}</summary>
-          ${fins.length ? fins.map(o => item(o, vista)).join('') : '<div class="sub-buit">Cap de moment</div>'}
+          ${fins.length ? perMaterial(fins, vista) : '<div class="sub-buit">Cap de moment</div>'}
         </details>
       </div>
     </details>`;

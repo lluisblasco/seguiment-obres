@@ -256,3 +256,9 @@ button.etc:hover{transform:scale(1.15);border-color:var(--mitjanit-4)}
 .sub-fila input:focus-visible + .sub-check{outline:3px solid var(--contrast);outline-offset:2px}
 .et-prog{font-size:11.5px;font-weight:700;color:var(--text-3);margin-left:4px}
 .etc.parcial{border:2.5px solid var(--blau);color:var(--blau);background:var(--blau-bg);font-size:10.5px}
+.grup-mat{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;margin:6px 0 10px}
+.grup-mat span{font-size:12px;background:var(--mitjanit);color:#fff;padding:1px 9px;border-radius:999px}
+.targetes + .grup-mat{margin-top:22px}
+.grup-mat{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;margin:6px 0 10px}
+.grup-mat span{font-size:12px;background:var(--mitjanit);color:#fff;padding:1px 9px;border-radius:999px}
+.targetes + .grup-mat{margin-top:22px}

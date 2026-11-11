@@ -2,7 +2,7 @@
 import { app, registraVista, refresca, navega } from '../main.js';
 import { topbar } from './shell.js';
 import { esc, toast, confirma, dataCurta, guardaLocal, llegeixLocal, atributsDiners } from '../util.js';
-import { ETAPES, novaObra, etapaActual, avisos, estadistiques, comandesDesDElements, fmtDiners, TIPUS_DIBUIXABLES, campsQueFalten, esFinalitzada, SUBTASQUES, marcaEtapa, marcaSubtasca, progresSubtasques } from '../model.js';
+import { ETAPES, novaObra, etapaActual, avisos, estadistiques, comandesDesDElements, fmtDiners, TIPUS_DIBUIXABLES, campsQueFalten, esFinalitzada, agrupaPerMaterial, SUBTASQUES, marcaEtapa, marcaSubtasca, progresSubtasques } from '../model.js';
 import { desaObra } from './arrencada.js';
 import { esborra, desaFoto, fotoURL, esborraFoto } from '../db.js';
 import { comprimeixFoto } from '../fotos.js';
@@ -24,7 +24,7 @@ function llista(ruta) {
   const titol = `${ruta.vista === 'obres' ? 'Obres' : 'Particulars'} ${fin ? 'finalitzades' : 'en curs'}`;
   return topbar(titol, { sub: `${obres.length}`, amagat: app.amagat, accions: `<button class="btn prim" data-accio="nova-obra" data-tipus="${tipus}">+ Nou${ruta.vista === 'obres' ? 'a obra' : ' particular'}</button>` }) +
     `<div class="segment"><button class="${fin ? '' : 'on'}" data-ruta="#/${ruta.vista}">En curs<span>${nEnCurs}</span></button><button class="${fin ? 'on' : ''}" data-ruta="#/${ruta.vista}/finalitzades">Finalitzades<span>${nFin}</span></button></div>` +
-    (obres.length ? `<div class="targetes">${obres.map(o => {
+    (obres.length ? agrupaPerMaterial(obres).map(g => `<h2 class="grup-mat">${g.material}<span>${g.obres.length}</span></h2><div class="targetes">${g.obres.map(o => {
       const act = etapaActual(o), av = avisos(o), te = av.some(a => a.nivell === 'avis'), s = estadistiques(o);
       return `<button class="card targeta" data-ruta="#/${ruta.vista}/${encodeURIComponent(o.id)}">
         <div class="t-cap"><b>${esc(o.client)}</b><span class="diners">${fmtDiners(o.import, app.amagat)}</span></div>
@@ -34,7 +34,7 @@ function llista(ruta) {
         <div class="t-et"><b>${o.etapes[11] ? 'Acabada' : esc(ETAPES[act])}</b><span>${o.etapes.filter(Boolean).length} de 12</span></div>
         <span class="pill ${te ? 'avis' : 'ok'}">${te ? '⚠' : '✓'} ${esc((av.find(a => a.nivell === 'avis') || av[0]).text)}</span>
       </button>`;
-    }).join('')}</div>` : `<div class="card buit"><b>Cap ${ruta.vista === 'obres' ? 'obra' : 'particular'} de moment</b>${fin ? "Quan marquis l'etapa «Acabada» d'una obra, apareixerà aquí." : "Crea'n una amb el botó de dalt."}</div>`);
+    }).join('')}</div>`).join('') : `<div class="card buit"><b>Cap ${ruta.vista === 'obres' ? 'obra' : 'particular'} de moment</b>${fin ? "Quan marquis l'etapa «Acabada» d'una obra, apareixerà aquí." : "Crea'n una amb el botó de dalt."}</div>`);
 }
 
 // ---------------- Detall ----------------
